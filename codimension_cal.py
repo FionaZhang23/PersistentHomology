@@ -44,8 +44,8 @@ def codimension_barcode(barcode: List[Tuple[float, float]], assume_sorted: bool 
 
     return total
 N_TRIALS = 100     # number of independent samplings
-N_POINTS = 1000     # points per circle
-NOISE_SD = 0.1    # Gaussian noise std dev added to coordinates
+N_POINTS = 100     # points per circle
+NOISE_SD = 0.3    # Gaussian noise std dev added to coordinates
 BASE_SEED = 2025   # set for reproducibility (change if you want different runs)
 
 # --- Helper: sample one noisy circle in R^2 (uses tadasets.dsphere) ---
@@ -84,7 +84,7 @@ plt.xlabel("Codimension (per trial)")
 plt.ylabel("Count")
 plt.title(f"Codimension distribution over {N_TRIALS} noisy circles (n={N_POINTS}, σ={NOISE_SD})")
 plt.tight_layout()
-plt.savefig("codimension_hist_0.1.png", dpi=300, bbox_inches="tight")
+plt.savefig("codimension_hist_0.3.png", dpi=300, bbox_inches="tight")
 
 '''
 bars_1 = [(0.0, 0.2), (0.3, 0.5), (0.6, 0.7), (0.8, 1.0)]
