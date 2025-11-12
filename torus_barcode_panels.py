@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from tadasets import torus
 from ripser import ripser
 import persim  # scikit-tda plotting
+import codim_functions as cf  # <- for weighted_quiver_codim
 
 # -------- Output folder --------
 OUT_DIR = Path("/Users/fionazhang/PycharmProjects/PersistentHomology/graphs/torus_barcodes")
@@ -64,9 +65,7 @@ def plot_single_diagram(ax, H1: np.ndarray, xlim: Tuple[float, float], ylim: Tup
     """
     Use scikit-tda persim to plot the H1 persistence diagram on the given Axes.
     """
-    # Filter to finite points for plotting bounds
     H1_plot = H1[np.isfinite(H1).all(axis=1)] if H1.size else H1
-    # persim accepts either a single (k,2) array or a list of diagrams
     persim.plot_diagrams(H1_plot, ax=ax, show=False)
     ax.set_xlim(*xlim)
     ax.set_ylim(*ylim)
@@ -80,15 +79,21 @@ def save_torus_panel_with_barcodes_and_diagrams(
     """
     For a fixed (a,c,noise), sample `num_samples` times, compute H1,
     and create a 5x2 grid: left column = barcode, right column = persim diagram.
+    Also annotate each row with the weighted codimension value.
     """
     rng = np.random.default_rng(base_seed + int(10_000 * a + 100 * c + 10 * noise))
 
     H1_list: List[np.ndarray] = []
+    wcodim_list: List[float] = []
+
     for _ in range(num_samples):
         seed = int(rng.integers(0, 2**31 - 1))
         X = sample_torus(n=n, c=c, a=a, noise=noise, seed=seed)
         H1 = ripser_h1(X)
         H1_list.append(H1)
+        # weighted codimension (expects list of tuples)
+        wcodim = cf.weighted_quiver_codim([tuple(row) for row in H1], assume_sorted=False)
+        wcodim_list.append(float(wcodim))
 
     # Determine consistent x/y bounds across all samples (ignore infs)
     finite_births = [pt[0] for H1 in H1_list for pt in H1 if np.isfinite(pt).all()]
@@ -109,7 +114,6 @@ def save_torus_panel_with_barcodes_and_diagrams(
     rows = num_samples
     fig, axes = plt.subplots(rows, 2, figsize=(12, 2.2 * rows), constrained_layout=True, sharex="col")
 
-    # Ensure axes is 2D array
     if rows == 1:
         axes = np.array([axes])  # shape (1,2)
 
@@ -123,7 +127,14 @@ def save_torus_panel_with_barcodes_and_diagrams(
 
         plot_single_diagram(ax_dgm, H1_list[k], xlim=xlim, ylim=ylim)
 
-        # Only bottom row gets x-labels
+        # annotate weighted codimension on the diagram panel (top-right, small box)
+        ax_dgm.text(
+            0.98, 0.98, f"weighted codim = {wcodim_list[k]:.4f}",
+            transform=ax_dgm.transAxes, ha="right", va="top",
+            fontsize=9,
+            bbox=dict(facecolor="white", edgecolor="0.5", boxstyle="round,pad=0.25", alpha=0.8)
+        )
+
         if k == rows - 1:
             ax_bar.set_xlabel("Scale (birth → death)")
             ax_dgm.set_xlabel("Birth")
