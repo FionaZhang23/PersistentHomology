@@ -154,7 +154,7 @@ def save_torus_panel_with_barcodes_and_diagrams(
 if __name__ == "__main__":
     print(f"Saving SVGs to: {OUT_DIR}")
     a = 1
-    n = 100
+    n = 1000
     num_samples = 5
     noise_list = [0.0, 0.1, 0.2, 0.3, 0.4]
 
